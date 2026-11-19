@@ -262,7 +262,7 @@ export function registerDataRoutes(router) {
 
   router.add('GET', '/categories/:id/rule-at', { auth: true, roles: ALL }, async (ctx) => {
     if (!isIsoDate(ctx.query.date)) throw new HttpError(400, 'INVALID_DATE');
-    const r = ruleAt(ctx.db, intParam(ctx.params.id), ctx.query.date);
+    const r = await ruleAt(ctx.db, intParam(ctx.params.id), ctx.query.date);
     return r ? { rule: { id: r.id, category_id: r.category_id, version: r.version, operation: r.operation, add_hours: r.add_hours, multiplier: r.multiplier, effective_from: r.effective_from } } : { rule: null };
   });
 

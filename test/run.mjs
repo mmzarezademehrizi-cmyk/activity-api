@@ -258,6 +258,22 @@ try {
   r = await call('DELETE', `/activities/${bigId}`, undefined, owner); assert.equal(r.status, 200);
   r = await call('GET', `/activities/${bigId}/entries`, undefined, owner); assert.equal(r.status, 404);
 
+
+  // ───── regression: every response shape the apps parse ─────
+  r = await call('GET', `/categories/${cid}/rule-at?date=${today}`, undefined, owner);
+  assert.equal(r.status, 200); assert.ok(r.body.rule && r.body.rule.version >= 1 && typeof r.body.rule.id === 'number' && typeof r.body.rule.category_id === 'number');
+  assert.equal(typeof r.body.rule.add_hours, 'number'); assert.equal(typeof r.body.rule.multiplier, 'number'); assert.ok(r.body.rule.effective_from);
+  r = await call('GET', `/categories/${sid}/rule-at?date=${today}`, undefined, owner); assert.equal(r.status, 200); assert.equal(r.body.rule, null);
+  r = await call('GET', `/categories/${cid}/rules`, undefined, owner); assert.ok(r.body.length >= 1 && typeof r.body[0].id === 'number');
+  r = await call('GET', `/categories/${cid}/usage`, undefined, owner); assert.equal(typeof r.body.count, 'number');
+  r = await call('GET', '/members/' + ids[0] + '/usage', undefined, owner); assert.equal(typeof r.body.count, 'number');
+  r = await call('GET', '/categories', undefined, owner);
+  for (const c of r.body) { assert.equal(typeof c.id, 'number'); assert.equal(typeof c.title, 'string'); assert.ok([0, 1].includes(c.is_active)); assert.equal(typeof c.sort_order, 'number'); assert.ok(Array.isArray(c.days)); }
+  r = await call('GET', '/auth/me', undefined, owner); assert.equal(r.status, 200); assert.ok(r.body.user.id);
+  r = await call('GET', '/owner/settings', undefined, owner); assert.equal(r.status, 200);
+  r = await call('GET', '/owner/info-fields', undefined, owner); assert.equal(r.status, 200);
+  ok('rule-at / rules / usage / list shapes the apps parse');
+
   realLog(`\nALL ${passed} CHECKS PASSED`);
 } catch (e) {
   realLog('\nTEST FAILED:', e);
